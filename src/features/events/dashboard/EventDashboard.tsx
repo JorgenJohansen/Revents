@@ -1,10 +1,40 @@
 import { Grid } from "semantic-ui-react";
 import EventList from "./EventList";
-import { useAppSelector } from "../../../app/store/store";
+import { useAppDispatch, useAppSelector } from "../../../app/store/store";
+import { useEffect, useState } from "react";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { db } from "../../../app/config/firebase";
+import { AppEvent } from "../../../app/types/event";
+import { setEvents } from "../eventSlice";
+import LoadingComponent from "../../../app/layout/LoadingComponent";
 
 
 export default function EventDashboard() {
   const events = useAppSelector(state => state.events.events);
+  const dispatch = useAppDispatch();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, 'events'));
+    const unsubscribe = onSnapshot(q, {
+      next: querySnapshot => {
+        const events: AppEvent[] = [];
+        querySnapshot.forEach(doc => {
+          events.push({id: doc.id, ...doc.data()} as AppEvent)
+        })
+        dispatch(setEvents(events));
+        setLoading(false);
+      },
+      error: err => {
+        console.log(err)
+        setLoading(false);
+      },
+      complete: () => console.log('never will see this!')
+    });
+    return () => unsubscribe();
+  },[dispatch])
+
+  if(loading) return <LoadingComponent />
   return (
     <Grid>
       <Grid.Column width={10}>
