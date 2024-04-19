@@ -4,6 +4,8 @@ import { useAppDispatch } from "../../app/store/store";
 import { closeModal } from "../../app/common/modals/modalSlice";
 import { Form, Button } from "semantic-ui-react";
 import { signIn } from "./authSlice";
+import { auth } from "../../app/config/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginForm() {
     const {register, handleSubmit, formState: {isSubmitting, isValid, isDirty, errors}} = useForm({
@@ -11,9 +13,16 @@ export default function LoginForm() {
     });
     const dispatch = useAppDispatch();
 
-    function onSubmit(data: FieldValues){
-        dispatch(signIn(data));
-        dispatch(closeModal());
+    async function onSubmit(data: FieldValues){
+        try {
+            const result = await signInWithEmailAndPassword(auth, data.email, data.password);
+            dispatch(signIn(result.user));
+            dispatch(closeModal());
+            
+        } catch (error) {
+            console.log(error);
+        }
+        
     }
   return (
     <ModalWrapper header='Sign into Revents'>
