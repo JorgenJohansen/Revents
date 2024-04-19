@@ -1,40 +1,22 @@
 import { Grid } from "semantic-ui-react";
 import EventList from "./EventList";
-import { useAppDispatch, useAppSelector } from "../../../app/store/store";
-import { useEffect, useState } from "react";
-import { collection, onSnapshot, query } from "firebase/firestore";
-import { db } from "../../../app/config/firebase";
-import { AppEvent } from "../../../app/types/event";
-import { setEvents } from "../eventSlice";
+import { useAppSelector } from "../../../app/store/store";
+import { useEffect} from "react";
+
+import { actions} from "../eventSlice";
 import LoadingComponent from "../../../app/layout/LoadingComponent";
+import { useFireStore } from "../../../app/hooks/firestore/useFirestore";
 
 
 export default function EventDashboard() {
-  const events = useAppSelector(state => state.events.events);
-  const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(true);
+  const {data: events, status} = useAppSelector(state => state.events);
+  const {loadCollection} = useFireStore('events');
 
   useEffect(() => {
-    const q = query(collection(db, 'events'));
-    const unsubscribe = onSnapshot(q, {
-      next: querySnapshot => {
-        const events: AppEvent[] = [];
-        querySnapshot.forEach(doc => {
-          events.push({id: doc.id, ...doc.data()} as AppEvent)
-        })
-        dispatch(setEvents(events));
-        setLoading(false);
-      },
-      error: err => {
-        console.log(err)
-        setLoading(false);
-      },
-      complete: () => console.log('never will see this!')
-    });
-    return () => unsubscribe();
-  },[dispatch])
+    loadCollection(actions);
+  },[loadCollection])
 
-  if(loading) return <LoadingComponent />
+  if(status === 'loading') return <LoadingComponent />
   return (
     <Grid>
       <Grid.Column width={10}>
