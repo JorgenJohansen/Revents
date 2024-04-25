@@ -38,7 +38,7 @@ export default function EventDashboard() {
         
       </Grid.Column>
       <Grid.Column width={6}>
-        <div className="ui fixed top sticky" style={{top: 98, width: 405}}>
+        <div className="ui fixed top sticky" style={{top: 200, width: 405}}>
           <EventFilters setQuery={setQuery} />
         </div>
           
