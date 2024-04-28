@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { batchFollowToggle } from "../../app/actions/firestoreActions";
 
 type Props = {
-    profile: Profile
+        profile: Profile
 }
 
 export default function ProfileHeader({profile}: Props) {
