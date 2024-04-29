@@ -1,6 +1,9 @@
-import { collection, doc, increment, writeBatch } from "firebase/firestore";
+import { collection, doc, getDocs, increment, writeBatch } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 import { Profile } from "../types/profile";
+import { CollectionOptions } from "../hooks/firestore/types";
+import { getQuery } from "../hooks/firestore/getQuery";
+import { Attendee } from "../types/event";
 
 export async function batchFollowToggle(profile: Profile, follow: boolean){
     const currentUser = auth.currentUser;
@@ -33,4 +36,42 @@ export async function batchFollowToggle(profile: Profile, follow: boolean){
     }
 
     await batch.commit();
+}
+
+export async function batchSetPhoto(photoURL: string){
+    const currentUser = auth.currentUser;
+    const eventQueryOptions: CollectionOptions = {
+        queries: [
+            {attribute: 'attendeeIds', operator: 'array-contains', value: currentUser?.uid as string},
+            {attribute: 'date', operator: '>=', value: new Date()}
+        ]
+    }
+    const profileDocRef = doc(db, 'profiles', currentUser?.uid as string);
+    const eventDocQuery = getQuery('events', eventQueryOptions);
+    const batch = writeBatch(db);
+
+    try {
+        batch.update(profileDocRef, {
+            photoURL: photoURL
+        });
+        const eventQuerysnap = await getDocs(eventDocQuery);
+        eventQuerysnap.docs.forEach(eventDoc => {
+            if(eventDoc.data().hostUid === currentUser?.uid){
+                batch.update(eventDoc.ref, {
+                    hostPhotoURL: photoURL
+                })
+            }
+            batch.update(eventDoc.ref, {
+                attendees: eventDoc.data().attendees.filter((attendee: Attendee) => {
+                    if(attendee.id === currentUser?.uid){
+                        attendee.photoURL = photoURL;
+                    }
+                    return attendee
+                })
+            })
+        })
+        await batch.commit();
+    } catch (error) {
+        console.log(error)
+    }
 }
