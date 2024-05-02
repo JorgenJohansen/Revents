@@ -46,5 +46,6 @@ export const actions = eventSlice.actions as GenericActions<AppEvent[]>;
 function removeDuplicates(events: AppEvent[]){
     return Array.from(new Set(events
         .map(x => x.id)))
-        .map(id => events.find(a => a.id === id)) as AppEvent[]
+        .map(id => events.find(a => a.id === id) as AppEvent)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 }
