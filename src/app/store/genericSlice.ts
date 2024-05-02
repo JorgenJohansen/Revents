@@ -44,6 +44,7 @@ export type GenericState<T> = {
   }
 
   export type GenericActions<T> = {
+    reset(): any
     loading: ActionCreatorWithoutPayload<string>;
     success: ActionCreatorWithPayload<T, string> | ActionCreatorWithPreparedPayload<any, T, string, never, never>;
     error: ActionCreatorWithOptionalPayload<any, string>;
